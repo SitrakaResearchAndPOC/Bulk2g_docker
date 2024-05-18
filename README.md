@@ -75,35 +75,35 @@ save by ctrl+x
 apt update
  ```
 ```
-apt-get install nano wget gedit mousepad wireshark
+apt install nano wget gedit mousepad wireshark
 ```
 ```
-apt-get install libtool shtool automake dahdi-source libssl-dev sqlite3 libsqlite3-dev libsctp-dev libfftw3-dev libfftw3-3 autoconf libsctp-dev libgnutls28-dev libcurl4-gnutls-dev git-core pkg-config make gcc gcc-arm-none-eabi doxygen libtalloc-dev libpcsclite-dev libusb-1.0-0-dev
+apt install libtool shtool automake dahdi-source libssl-dev sqlite3 libsqlite3-dev libsctp-dev libfftw3-dev libfftw3-3 autoconf libsctp-dev libgnutls28-dev libcurl4-gnutls-dev git-core pkg-config make gcc gcc-arm-none-eabi doxygen libtalloc-dev libpcsclite-dev libusb-1.0-0-dev
 ```
 ```
-apt-get install build-essential gcc g++ make automake autoconf libtool pkg-config libtalloc-dev libpcsclite-dev libortp-dev libsctp-dev libssl-dev libdbi-dev libdbd-sqlite3 libsqlite3-dev libpcap-dev libc-ares-dev libgnutls28-dev libsctp-dev sqlite3 libsofia-sip-ua-glib-dev libusb-1.0-0-dev libfftw3-dev libgsm1-dev
+apt install build-essential gcc g++ make automake autoconf libtool pkg-config libtalloc-dev libpcsclite-dev libortp-dev libsctp-dev libssl-dev libdbi-dev libdbd-sqlite3 libsqlite3-dev libpcap-dev libc-ares-dev libgnutls28-dev libsctp-dev sqlite3 libsofia-sip-ua-glib-dev libusb-1.0-0-dev libfftw3-dev libgsm1-dev
 ```
 ```
-apt-get install autoconf automake build-essential ccache cmake cpufrequtils doxygen ethtool g++ git inetutils-tools libboost-all-dev libncurses5 libncurses5-dev libusb-1.0-0 libusb-1.0-0-dev libusb-dev python3-dev python3-mako python3-numpy python3-requests python3-scipy python3-setuptools python3-ruamel.yaml
+apt install autoconf automake build-essential ccache cmake cpufrequtils doxygen ethtool g++ git inetutils-tools libboost-all-dev libncurses5 libncurses5-dev libusb-1.0-0 libusb-1.0-0-dev libusb-dev python3-dev python3-mako python3-numpy python3-requests python3-scipy python3-setuptools python3-ruamel.yaml
 ```
 ```
-apt-get install libtool shtool automake dahdi-source libssl-dev sqlite3 libsqlite3-dev libsctp-dev libfftw3-dev libfftw3-3 autoconf libsctp-dev libgnutls28-dev libcurl4-gnutls-dev git-core pkg-config make doxygen libtalloc-dev libpcsclite-dev libusb-1.0-0-dev
+apt install libtool shtool automake dahdi-source libssl-dev sqlite3 libsqlite3-dev libsctp-dev libfftw3-dev libfftw3-3 autoconf libsctp-dev libgnutls28-dev libcurl4-gnutls-dev git-core pkg-config make doxygen libtalloc-dev libpcsclite-dev libusb-1.0-0-dev
 ```
 ```
-apt-get install asterisk telnet python3-pip
+apt install asterisk telnet python3-pip
 ```
 ```
 pip3 install smpplib
 ```
 Installing dependencies before libosmo-abis
 ```
-apt-get install libortp-dev
+apt install libortp-dev
 ```
 ```
-apt-get install fuse zip
+apt install fuse zip
 ```
 ```
-apt-get install libfuse-dev 
+apt install libfuse-dev 
 ```
 Creating and installing all components
 ```
@@ -146,7 +146,7 @@ cd ../../..
 
 Installing libosmocore 1.7.0 or 1.0.1
 ```
-apt-get install libmnl-dev
+apt install libmnl-dev
 ```
 
 ```
@@ -180,7 +180,7 @@ cd ..
 
 
 Just for memos :  
-git clone git://git.osmocom.org/osmocom-bb.git  
+git clone https://git.osmocom.org/osmocom-bb.git  
 cd osmocom-bb/  
 git checkout 4f677e6ba8434dab376495cd996d140548fa6e93  
 cd src  
@@ -195,7 +195,7 @@ cd ../..
 FOR CALYPSO  
 Installing libosmo-dsp
 ```
-git clone git://git.osmocom.org/libosmo-dsp.git
+git clone https://git.osmocom.org/libosmo-dsp.git
 ```
 ```
 cd libosmo-dsp/
@@ -223,7 +223,7 @@ cd ..
 ```
 Installing trx
 ```
-git clone git://git.osmocom.org/osmocom-bb.git -b fixeria/trx trx
+git clone https://git.osmocom.org/osmocom-bb.git -b fixeria/trx trx
 ```
 ```
 cd trx/src/

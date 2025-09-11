@@ -1049,7 +1049,7 @@ bash install_services.sh
 exit
 ```
 ```
-lxc exec BulkSMS -- bash 
+docker exec bulk2g bash 
 ```
 ```
 osmo-trx-uhd -C /etc/osmocom/osmo-trx-uhd.cfg

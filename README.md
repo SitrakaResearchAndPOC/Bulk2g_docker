@@ -28,11 +28,55 @@ Hardware setup 2 : No need battery and programmable with arduino
 
 # INSTALLATION OF DOCKER KARLIBTS
 ## preparing docker 
+
 ```
-docker pull debian:buster
+nano Dockerfile 
 ```
 ```
-docker run -tid --privileged -v /dev/bus/usb:/dev/bus/usb -v /dev:/dev -v /tmp/.X11-unix:/tmp/.X11-unix:ro -v $XAUTHORITY:/home/user/.Xauthority:ro --net=host --env="DISPLAY=$DISPLAY" --env="LC_ALL=C.UTF-8" --env="LANG=C.UTF-8" --name bulk2g debian:buster
+# Utilise l'image officielle de Debian Buster
+FROM debian:buster
+
+# Définir l'environnement container comme docker
+ENV container docker
+
+# Corriger les sources.list et désactiver Check-Valid-Until
+RUN echo "deb http://archive.debian.org/debian buster main contrib non-free" > /etc/apt/sources.list && \
+    echo "deb http://archive.debian.org/debian-security buster/updates main" >> /etc/apt/sources.list && \
+    echo 'Acquire::Check-Valid-Until "0";' > /etc/apt/apt.conf.d/99no-check-valid-until && \
+    apt-get update && \
+    apt-get install -y systemd systemd-sysv dbus && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
+
+# Définir un signal d'arrêt pour systemd
+STOPSIGNAL SIGRTMIN+3
+
+# Déclare un volume pour les cgroups
+VOLUME [ "/sys/fs/cgroup" ]
+
+# Lancer init (systemd) au démarrage du conteneur
+CMD ["/sbin/init"]
+```
+```
+docker build -t debian-buster-systemd .
+```
+```  
+  docker run -tid --privileged \
+  --cgroupns=host \
+  --net=host \
+  -v /sys/fs/cgroup:/sys/fs/cgroup:rw \
+  -v /dev:/dev \
+  -v /dev/bus/usb:/dev/bus/usb \
+  -v /tmp/.X11-unix:/tmp/.X11-unix:ro \
+  -v $XAUTHORITY:/home/user/.Xauthority:ro \
+  --tmpfs /run \
+  --tmpfs /run/lock \
+  --env="DISPLAY=$DISPLAY" \
+  --env="LC_ALL=C.UTF-8" \
+  --env="LANG=C.UTF-8" \
+  --name bulk2g \
+  --hostname  bulk2g \
+  debian-buster-systemd
 ```
 ```
 xhost +
@@ -46,34 +90,6 @@ apt update
 ```
 apt install nano zsh vim
 ```
-```
-nano /etc/apt/source.list
-```
-Change apt file
-```
-#
-
-# deb cdrom:[Debian GNU/Linux 10.13.0 _Buster_ - Official amd64 DVD Binary-1 20220910-18:04]/ buster contrib main
-
-#deb cdrom:[Debian GNU/Linux 10.13.0 _Buster_ - Official amd64 DVD Binary-1 20220910-18:04]/ buster contrib main
-
-# Line commented out by installer because it failed to verify:
-#deb http://security.debian.org/debian-security buster/updates main contrib
-# Line commented out by installer because it failed to verify:
-#deb-src http://security.debian.org/debian-security buster/updates main contrib
-
-# buster-updates, previously known as 'volatile'
-# A network mirror was not selected during install.  The following entries
-# are provided as examples, but you should amend them as appropriate
-# for your mirror of choice.
-#
- deb http://deb.debian.org/debian/ buster main contrib
- deb-src http://deb.debian.org/debian/ buster main contrib
-```
-save by ctrl+x
-``` 
-apt update
- ```
 ```
 apt install nano wget gedit mousepad wireshark
 ```

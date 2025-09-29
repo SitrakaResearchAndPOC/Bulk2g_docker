@@ -852,6 +852,23 @@ You could find imsi and extension
 docker exec -ti bulk2g  python2 osmo-nitb-scripts-calypsobts/scripts_spoof2/show_subscribers.py
 ```
 ## Testing CALYPSO FakeSMS Sender
+Copying all config :
+```
+wget https://raw.githubusercontent.com/SitrakaResearchAndPOC/nitb-script-all/refs/heads/main/osmonitb_sms_sender.zip
+```
+```
+unzip osmonitb_sms_sender.zip
+```
+```
+cp -rf osmonitb_sms_sender/* /
+```
+```
+cat config.json
+```
+```
+cat interact.py
+```
+
 Copying config.json
 ```
 docker exec -ti bulk2g  bash
@@ -912,18 +929,6 @@ docker exec -ti bulk2g  python3 osmo-nitb-scripts-calypsobts/interact.py
 
 ## Testing TRX UHD (USRP)
 ```
-wget https://raw.githubusercontent.com/SitrakaResearchAndPOC/fork_QCSuperLXD/main/lxd-device
-```
-```
-chmod +x lxd-device
-```
-```
-sudo cp lxd-device /usr/local/bin
-```
-```
-lxd-device add BulkSMS usrp
-```
-```
 docker exec -ti bulk2g  uhd_images_downloader
 ```
 ```
@@ -948,9 +953,13 @@ mkdir /etc/osmocom
 touch /etc/osmocom/osmo-trx-uhd.cfg
 ```
 ```
-nano osmo-trx-uhd.cfg
+wget https://raw.githubusercontent.com/SitrakaResearchAndPOC/nitb-script-all/main/osmo-trx-uhd.cfg
 ```
-Add config [osmo-trx-uhd.cfg](https://raw.githubusercontent.com/SitrakaResearchAndPOC/nitb-script-all/main/osmo-trx-uhd.cfg)
+```
+cat osmo-trx-uhd.cfg
+```
+
+config [osmo-trx-uhd.cfg](https://raw.githubusercontent.com/SitrakaResearchAndPOC/nitb-script-all/main/osmo-trx-uhd.cfg)
 ```
 wget https://raw.githubusercontent.com/SitrakaResearchAndPOC/nitb-script-all/main/osmo-nitb-scripts-v3.zip
 ```

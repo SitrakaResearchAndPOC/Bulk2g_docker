@@ -959,7 +959,7 @@ wget https://raw.githubusercontent.com/SitrakaResearchAndPOC/nitb-script-all/mai
 cat osmo-trx-uhd.cfg
 ```
 
-config [osmo-trx-uhd.cfg](https://raw.githubusercontent.com/SitrakaResearchAndPOC/nitb-script-all/main/osmo-trx-uhd.cfg)
+Config at : [osmo-trx-uhd.cfg](https://raw.githubusercontent.com/SitrakaResearchAndPOC/nitb-script-all/main/osmo-trx-uhd.cfg)
 ```
 wget https://raw.githubusercontent.com/SitrakaResearchAndPOC/nitb-script-all/main/osmo-nitb-scripts-v3.zip
 ```

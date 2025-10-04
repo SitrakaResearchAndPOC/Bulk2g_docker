@@ -1086,12 +1086,12 @@ docker exec -ti bulk2g python3 osmo-nitb-scripts/main_uhd.py
 ```
 Add victim phone and tape Tape ctrl+shift+T
 ```
-docker exec -ti bulk2g  nano osmo-nitb-scripts-calypsobts/interact.py
+docker exec -ti bulk2g  nano osmo-nitb-scripts/interact.py
 ```
 Change the the paramater default for add_argument in /var/lib/osmocom/hlr.sqlite3
 
 ```
-docker exec -ti bulk2g  python3 osmo-nitb-scripts-calypsobts/interact.py
+docker exec -ti bulk2g  python3 osmo-nitb-scripts/interact.py
 ```
 
 ```

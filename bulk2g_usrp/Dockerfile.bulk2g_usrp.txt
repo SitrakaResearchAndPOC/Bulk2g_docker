@@ -1,0 +1,213 @@
+FROM debian:buster
+
+ENV DEBIAN_FRONTEND=noninteractive
+ENV container docker
+
+# Définir l'environnement container comme docker
+ENV container docker
+
+# Corriger les sources.list et désactiver Check-Valid-Until
+RUN echo "deb http://archive.debian.org/debian buster main contrib non-free" > /etc/apt/sources.list && \
+    echo "deb http://archive.debian.org/debian-security buster/updates main" >> /etc/apt/sources.list && \
+    echo 'Acquire::Check-Valid-Until "0";' > /etc/apt/apt.conf.d/99no-check-valid-until 
+
+# Mise à jour des sources Debian archivées + fix Check-Valid-Until
+RUN apt-get update -o Acquire::Retries=5 -o Acquire::http::Timeout=30
+
+# --- 1. Systemd, dbus, sudo ---
+RUN apt-get install -y -o Acquire::Retries=5 --no-install-recommends \
+    systemd systemd-sysv dbus sudo
+
+# Créez un utilisateur non-root
+# RUN useradd -ms /bin/bash user && \
+#     usermod -aG sudo user && \
+#     echo "user ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
+
+# Repassez temporairement en root pour les installations
+# USER root
+
+# --- 2. Éditeurs et outils de texte ---
+RUN apt-get install -y -o Acquire::Retries=5 --no-install-recommends \
+    nano vim
+
+# --- 3. Outils de compilation / build tools ---
+RUN apt-get install -y -o Acquire::Retries=5 --no-install-recommends \
+    build-essential gcc g++ make cmake \
+    autoconf automake libtool pkg-config shtool \
+    doxygen libc6-dev gcc-arm-none-eabi libnewlib-arm-none-eabi
+
+# --- 4. Environnement Python + SciPy ---
+RUN apt-get install -y -o Acquire::Retries=5 --no-install-recommends \
+    python3 python3-pip python3-dev \
+    python3-mako python3-numpy python3-requests \
+    python3-scipy python3-setuptools python3-ruamel.yaml
+
+# --- 5. Libs Crypto / HTTPS ---
+RUN apt-get install -y -o Acquire::Retries=5 --no-install-recommends \
+    libssl-dev libgnutls28-dev libcurl4-gnutls-dev 
+
+# --- 6. Libs USB ---
+RUN apt-get install -y -o Acquire::Retries=5 --no-install-recommends \
+    libusb-1.0-0 libusb-1.0-0-dev  libusb-dev
+
+# --- 7. Bases de données et protocoles ---
+RUN apt-get install -y -o Acquire::Retries=5 --no-install-recommends \
+    sqlite3 libsqlite3-dev libdbi-dev libdbd-sqlite3 \
+    libpcsclite-dev   libfftw3-3 libfftw3-dev libgsm1-dev libmnl-dev libsctp-dev libc-ares-dev
+
+# --- 8. Outils réseau ---
+RUN apt-get install -y -o Acquire::Retries=5 --no-install-recommends \
+    libpcap-dev inetutils-tools telnet wireshark ethtool 
+
+# --- 9. Outils spécifiques ---
+RUN apt-get install -y -o Acquire::Retries=5 --no-install-recommends \
+    fuse libfuse-dev zip \
+    libtalloc-dev libncurses5 libncurses5-dev \
+    zsh wget unzip git-core libboost-all-dev 
+
+# --- 10. Serveur VoIP / Asterisk ---
+RUN apt-get install -y -o Acquire::Retries=5 --no-install-recommends \
+    asterisk libortp-dev libsofia-sip-ua-glib-dev dahdi-source
+
+# --- 11. Outils de dev et d'optimisation ---
+RUN apt-get install -y -o Acquire::Retries=5 --no-install-recommends \
+    ccache cpufrequtils 
+
+# Cleaning cache 
+RUN apt-get clean && rm -rf /var/lib/apt/lists/*    
+
+# Installation pip
+RUN pip3 install smpplib
+
+# Préparation des sources
+WORKDIR /
+mkdir -p home/user/src
+cd home/user/src
+
+# --- UHD (Ettus) v3.15.0.0 ---
+RUN git clone --depth 1 -b v3.15.0.0 https://github.com/EttusResearch/uhd && \
+    cd uhd/host && mkdir build && cd build && \
+    cmake .. && make -j$(nproc) && make install && ldconfig
+
+RUN bash -c 'attempts=0; until uhd_images_downloader || [ $attempts -ge 5 ]; do \
+    attempts=$((attempts+1)); echo "Retrying in 10 seconds... (attempt $attempts)"; sleep 10; done'
+
+# --- libosmocore v1.7.0 ---
+RUN git clone --depth 1 -b 1.7.0 https://gitea.osmocom.org/osmocom/libosmocore && \
+    cd libosmocore && autoreconf -fi && ./configure && make -j$(nproc) && \
+    make check && make install && ldconfig
+
+# --- libosmo-dsp ---
+RUN git clone https://git.osmocom.org/libosmo-dsp.git && \
+    cd libosmo-dsp && git checkout 551b9752bcd5d3d21bb2df0736b1801bda3d0d10 && \
+    autoreconf -i && ./configure && make -j$(nproc) && make install && ldconfig
+
+# --- trx (osmocom-bb fork) ---
+RUN git clone https://git.osmocom.org/osmocom-bb.git -b fixeria/trx trx && \
+    cd trx/src && git checkout 620fe497efa492feff4550e336cc3f8167715936 && \
+    sed -i 's|^[[:space:]]*#\s*\(CFLAGS += -DCONFIG_TX_ENABLE\)|\1|' target/firmware/Makefile && \
+    make HOST_layer23_CONFARGS=--enable-transceiver -e CROSS_TOOL_PREFIX=arm-none-eabi-  
+
+    
+# --- libosmo-abis v0.6.0 ---
+RUN git clone --depth 1 -b 0.6.0 https://gitea.osmocom.org/osmocom/libosmo-abis && \
+    cd libosmo-abis && autoreconf -fi && ./configure && make -j$(nproc) && make check && make install && ldconfig
+
+# --- libosmo-netif v0.4.0 ---
+RUN git clone --depth 1 -b 0.4.0 https://gitea.osmocom.org/osmocom/libosmo-netif && \
+    cd libosmo-netif && autoreconf -fi && ./configure && make -j$(nproc) && make check && make install && ldconfig
+
+# --- libosmo-sccp v1.0.0 ---
+RUN git clone --depth 1 -b 1.0.0 https://gitea.osmocom.org/osmocom/libosmo-sccp && \
+    cd libosmo-sccp && autoreconf -fi && ./configure && make -j$(nproc) && make check && make install && ldconfig
+
+# --- libasn1c v0.9.31 ---
+RUN git clone --depth 1 -b 0.9.31 https://gitea.osmocom.org/cellular-infrastructure/libasn1c && \
+    cd libasn1c && autoreconf -fi && ./configure && make -j$(nproc) && make check && make install && ldconfig
+
+# --- libsmpp34 v1.13.0 ---
+RUN git clone --depth 1 -b 1.13.0 https://gitea.osmocom.org/cellular-infrastructure/libsmpp34 && \
+    cd libsmpp34 && autoreconf -fi && ./configure && make -j$(nproc) && make check && make install && ldconfig
+
+# --- osmo-ggsn v1.9.0 ---
+RUN git clone --depth 1 -b 1.9.0 https://gitea.osmocom.org/cellular-infrastructure/osmo-ggsn && \
+    cd osmo-ggsn && autoreconf -fi && ./configure && make -j$(nproc) && make check && make install && ldconfig
+
+# --- osmo-sip-connector v1.3.1 ---
+RUN git clone --depth 1 -b 1.3.1 https://gitea.osmocom.org/cellular-infrastructure/osmo-sip-connector && \
+    cd osmo-sip-connector && autoreconf -fi && ./configure && make -j$(nproc) && make check && make install && ldconfig
+
+# --- osmo-trx v1.2.0 ---
+RUN git clone --depth 1 -b 1.2.0 https://gitea.osmocom.org/cellular-infrastructure/osmo-trx && \
+    cd osmo-trx && autoreconf -fi && ./configure --with-uhd && make -j$(nproc) && make check && make install && ldconfig
+
+# --- osmo-bts v1.2.2 ---
+RUN git clone --depth 1 -b 1.2.2 https://gitea.osmocom.org/cellular-infrastructure/osmo-bts && \
+    cd osmo-bts && autoreconf -fi && ./configure --enable-trx && make  V=1  -j$(nproc) && make check && make install && ldconfig
+
+# --- osmo-pcu v0.6.0 ---
+RUN git clone --depth 1 -b 0.6.0 https://gitea.osmocom.org/cellular-infrastructure/osmo-pcu && \
+    cd osmo-pcu && autoreconf -fi && ./configure && make -j$(nproc) && make check && make install && ldconfig
+
+# --- openbsc v1.4.1 ---
+RUN git clone --depth 1 -b 1.4.1 https://gitea.osmocom.org/cellular-infrastructure/openbsc && \
+    cd openbsc/openbsc && autoreconf -fi && ./configure --enable-mgcp-transcoding --enable-nat --enable-smpp --enable-osmo-bsc && \
+    make -j$(nproc) && make check && make install && ldconfig
+
+# --- osmo-hlr v1.0.0 ---
+RUN git clone --depth 1 -b 1.0.0 https://gitea.osmocom.org/cellular-infrastructure/osmo-hlr && \
+    cd osmo-hlr && autoreconf -fi && ./configure && make -j$(nproc) && make check && make install && ldconfig
+
+# --- osmo-sgsn v1.6.2 ---
+RUN git clone --depth 1 -b 1.6.2 https://gitea.osmocom.org/cellular-infrastructure/osmo-sgsn && \
+    cd osmo-sgsn && autoreconf -fi && ./configure && make -j$(nproc) && make check && make install && ldconfig
+
+
+
+# AJOUTER LES CONFIGURATIONS
+RUN cd / && \
+    mkdir -p /var/lib/osmocom /etc/osmocom && \
+    touch /var/lib/osmocom/hlr.sqlite3 /etc/osmocom/osmo-trx-uhd.cfg && \
+    \
+    # Télécharger osmo-trx-uhd.cfg avec retry
+    i=0; until wget -T 30 -O /etc/osmocom/osmo-trx-uhd.cfg https://raw.githubusercontent.com/SitrakaResearchAndPOC/nitb-script-all/main/osmo-trx-uhd.cfg || [ $i -ge 4 ]; do \
+        echo "Retry $((++i))/5 for osmo-trx-uhd.cfg..."; sleep 10; \
+    done && \
+    \
+    # Télécharger le script ZIP principal
+    i=0; until wget -T 30 -O osmo-nitb-scripts-v3.zip https://raw.githubusercontent.com/SitrakaResearchAndPOC/nitb-script-all/main/osmo-nitb-scripts-v3.zip || [ $i -ge 4 ]; do \
+        echo "Retry $((++i))/5 for osmo-nitb-scripts-v3.zip..."; sleep 10; \
+    done && \
+    \
+    # Décompresser avec retry
+    i=0; until unzip -o osmo-nitb-scripts-v3.zip || [ $i -ge 4 ]; do \
+        echo "Retry $((++i))/5 unzip osmo-nitb-scripts-v3.zip..."; sleep 5; \
+    done && \
+    \
+    # Exécuter le script d'installation
+    cd osmo-nitb-scripts && bash install_services.sh && cd / && \
+    \
+    # Télécharger le script SMS sender
+    i=0; until wget -T 30 -O osmonitb_sms_sender.zip https://raw.githubusercontent.com/SitrakaResearchAndPOC/nitb-script-all/refs/heads/main/osmonitb_sms_sender.zip || [ $i -ge 4 ]; do \
+        echo "Retry $((++i))/5 for osmonitb_sms_sender.zip..."; sleep 10; \
+    done && \
+    \
+    # Décompresser le SMS sender
+    i=0; until unzip -o osmonitb_sms_sender.zip || [ $i -ge 4 ]; do \
+        echo "Retry $((++i))/5 unzip osmonitb_sms_sender.zip..."; sleep 5; \
+    done && \
+    \
+    # Copier le fichier de config
+    cp osmonitb_sms_sender/config.json /
+
+
+
+# Définir un signal d'arrêt pour systemd
+STOPSIGNAL SIGRTMIN+3
+
+# Déclare un volume pour les cgroups
+VOLUME [ "/sys/fs/cgroup" ]
+
+# Lancer init (systemd) au démarrage du conteneur
+CMD ["/sbin/init"]
+#CMD ["tail", "-f", "/dev/null"]

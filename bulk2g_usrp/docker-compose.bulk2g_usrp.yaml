@@ -1,0 +1,36 @@
+version: "3"
+
+services:
+  bulk2g_usrp:
+    build:
+      context: .
+      dockerfile: Dockerfile.bulk2g_usrp
+    container_name: bulk2g_usrp
+    hostname: bulk2g_usrp
+
+
+    privileged: true
+    network_mode: host
+    cgroupns_mode: host
+
+    environment:
+      DISPLAY: ${DISPLAY}
+      LC_ALL: C.UTF-8
+      LANG: C.UTF-8
+
+    volumes:
+      - /sys/fs/cgroup:/sys/fs/cgroup:rw
+      - /dev:/dev
+      - /dev/bus/usb:/dev/bus/usb
+      - /tmp/.X11-unix:/tmp/.X11-unix:ro
+      - ${XAUTHORITY:-$HOME/.Xauthority}:/home/user/.Xauthority:ro
+
+    tmpfs:
+      - /run
+      - /run/lock
+
+    stdin_open: true
+    tty: true
+
+    # Pour systemd, on laisse CMD /sbin/init dans l'image
+    command: /sbin/init

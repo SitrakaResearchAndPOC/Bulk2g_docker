@@ -1091,9 +1091,8 @@ docker exec -ti bulk2g  cat osmo-nitb-scripts/interact.py
 Change the the paramater default for add_argument in /var/lib/osmocom/hlr.sqlite3
 
 ```
-docker exec -ti bulk2g  python3 osmo-nitb-scripts/interact.py
+docker exec -ti bulk2g  python3 osmo-nitb-scripts/interact.py -c /config.json
 ```
-
 ```
 exit
 ```
